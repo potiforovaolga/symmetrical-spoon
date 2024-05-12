@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Наша школа массажа</title>
+    <style>
+        .news-container {
+            height: 200px;
+            overflow-y: scroll;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Наша школа массажа</h1>
+        <nav>
+            <ul>
+                <li><a href="courses.html">КУРСЫ</a></li>                 
+                <li><a href="#">Расписание</a></li>
+                <li><a href="#">Бесплатные уроки</a></li>
+                <li><a href="#">Дистанционное обучение</a></li>
+                <li><a href="#">Преподаватели</a></li>
+                <li><a href="#">Вакансии</a></li>
+                <li><a href="#">Отзывы</a></li>
+                <li><a href="#">Трудоустройство</a></li>
+                <li><a href="#">Вход / Регистрация</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="about-school">
+        <h2>О нашей школе</h2>
+        <p>Один из немногих лицензированных учебных центров Санкт-Петербурга. Мы существуем с 1994 года и выпускаем высококвалифицированных специалистов. Теоретические и практические занятия проходят в специально оборудованных классах.</p>
+    </section>
+    <section id="ladoga">
+        <h2>Ладожская:</h2>
+        <p>8 (812) 922 11 56</p>
+    </section>
+
+    <section id="staraya-derevnya">
+        <h2>Старая деревня:</h2>
+        <p>8 (812) 906 86 21</p>
+    </section>
+
+    <div class="news-container">
+        <h2>Новости</h2>
+        <p><a href="#">Открытие нового курса "Профессиональный массаж спины".</a></p>
+        <p><a href="#">Бесплатный вебинар по техникам классического массажа в следующий четверг.</a></p>
+        <p><a href="#">Новый преподаватель - опытный массажист с 10-летним стажем.</a></p>
+        <p><a href="#">Скидка 20% на все курсы при записи до конца месяца.</a></p>
+        <!-- Можно добавить больше новостей здесь -->
+    </div>
+
+
+    <footer>
+        <p>&copy; 2022 Наша школа массажа</p>
+    </footer>
+
+<script>
+    const links = document.querySelectorAll('a');
+    
+    links.forEach(link => {
+        link.addEventListener('click', (event) => {
+            if (link.getAttribute('href') === 'courses.html') {
+                // Ничего не делаем, позволяем переходить на страницу с курсами
+            } else {
+                event.preventDefault();
+                alert("Привет, не забудь поставить зачет!");
+            }
+        });
+    });
+
+    window.addEventListener('error', function() {
+        alert("Что-то пошло не так, попробуй еще раз!");
+    });
+</script>
+
+</body>
+</html>
