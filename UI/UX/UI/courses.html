@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Наша школа массажа</title>
+</head>
+<body>
+    <header>
+        <h1>Наша школа массажа</h1>
+        <nav>
+            <ul>
+                <li><a href="courses.html">КУРСЫ</a></li> 
+                <li><a href="#">Расписание</a></li>
+                <li><a href="#">Бесплатные уроки</a></li>
+                <li><a href="#">Дистанционное обучение</a></li>
+                <li><a href="#">Преподаватели</a></li>
+                <li><a href="#">Вакансии</a></li>
+                <li><a href="#">Отзывы</a></li>
+                <li><a href="#">Трудоустройство</a></li>
+                <li><a href="#">Вход / Регистрация</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="courses">
+        <h2>Наши курсы</h2>
+        <ul>
+            <li>
+                <h3>Детский массаж</h3>
+                <p>50 ак.ч.</p>
+                <p>Цена: 20 000₽</p>
+                <a href="#">Подробнее</a> | <a href="#">Записаться</a>
+            </li>
+            <li>
+                <h3>Скульптурирующий массаж лица</h3>
+                <p>40 ак.ч.</p>
+                <p>Цена: 18 000₽</p>
+                <a href="#">Подробнее</a> | <a href="#">Записаться</a>
+            </li>
+            <li>
+                <h3>Тайский массаж</h3>
+                <p>80 ак.ч.</p>
+                <p>Цена: 25 000₽</p>
+                <a href="#">Подробнее</a> | <a href="#">Записаться</a>
+            </li>
+            <!-- Можно добавить другие курсы здесь -->
+        </ul>
+    </section>
+
+    <footer>
+        <p>Возможна рассрочка. Принимаем к оплате банковские карты. Верните 13% через налоговый вычет.</p>
+    </footer>
+
+    <footer>
+        <p>&copy; 2022 Наша школа массажа</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const links = document.querySelectorAll('a');
+            
+            links.forEach(link => {
+                link.addEventListener('click', (event) => {
+                    if (link.getAttribute('href') === 'courses.html') {
+                        // Ничего не делаем, позволяем переходить на страницу с курсами
+                    } else {
+                        event.preventDefault();
+                        alert("Привет, не забудь поставить зачет!");
+                    }
+                });
+            });
+        });
+
+        window.addEventListener('error', function() {
+            alert("Что-то пошло не так, попробуй еще раз!");
+        });
+    </script>
+</body>
+</html>
+
