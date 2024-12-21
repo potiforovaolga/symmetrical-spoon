@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Времена года</title>
+    <style>
+        .fragment {
+            display: none;
+        }
+        .visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Добро пожаловать в мир времён года!</h1>
+    <p>Предлагаем вашему вниманию описание четырёх сезонов: весны, лета, осени и зимы, которые приносят свои уникальные изменения и радости.</p>
+
+    <div role="region" aria-labelledby="seasons" tabindex="0">
+        <h2 id="seasons">Сезоны</h2>
+        <div id="fragment1" class="fragment" aria-live="polite" aria-atomic="true">
+            <h3>Весна</h3>
+            <p>Весна — это время пробуждения природы. Снег начинает таять, и под ним появляются первые цветы. Деревья покрываются зелеными листьями, а птицы возвращаются с юга, наполняя воздух радостным пением. Весна приносит надежду и обновление, когда всё вокруг начинает жить заново.</p>
+        </div>
+        <div id="fragment2" class="fragment" aria-live="polite" aria-atomic="true">
+            <h3>Лето</h3>
+            <p>Лето — это время яркого солнца и тепла. Природа расцветает во всей своей красе: поля покрыты цветами, а деревья приносят сочные плоды. Люди проводят время на свежем воздухе, наслаждаясь отдыхом на природе, купанием в реках и морях. Летние ночи наполнены звуками сверчков и ароматами цветов.</p>
+        </div>
+        <div id="fragment3" class="fragment" aria-live="polite" aria-atomic="true">
+            <h3>Осень</h3>
+            <p>Осень — это время, когда природа готовится к зимнему отдыху. Листья деревьев меняют цвет на яркие оттенки желтого, оранжевого и красного, создавая живописные пейзажи. В этот период собирают урожай, и воздух наполняется ароматом спелых фруктов и овощей. Осень приносит спокойствие и размышления о прошедшем годе.</p>
+        </div>
+        <div id="fragment4" class="fragment" aria-live="polite" aria-atomic="true">
+            <h3>Зима</h3>
+            <p>Зима — это время снега и морозов. Земля покрывается белым пушистым одеялом, а воздух становится свежим и холодным. Зимние праздники приносят радость и тепло в дома. Люди катаются на санках, лепят снеговиков и наслаждаются горячими напитками у камина. Зима — это время волшебства и уюта.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const fragments = [
+                'fragment1',
+                'fragment2',
+                'fragment3',
+                'fragment4'
+            ];
+
+            // Функция для отображения фрагмента
+            function showFragment(id) {
+                const fragment = document.getElementById(id);
+                fragment.classList.add('visible');
+            }
+
+            // Показ фрагментов с задержкой
+            fragments.forEach((id, index) => {
+                setTimeout(() => {
+                    showFragment(id);
+                }, index * 8000); // 8000 мс между показами
+            });
+
+            // Используем Intersection Observer для отслеживания видимости
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.setAttribute('aria-hidden', 'false');
+                    } else {
+                        entry.target.setAttribute('aria-hidden', 'true');
+                    }
+                });
+            });
+
+            // Наблюдаем за каждым фрагментом
+            fragments.forEach(id => {
+                const fragment = document.getElementById(id);
+                observer.observe(fragment);
+            });
+        });
+    </script>
+
+<footer style="text-align: center; margin-top: 20px; padding: 10px; background-color: #f4f4f4;">
+    <p>&copy; 2024 <a href="Potiforova.seasons.html" target="_blank" rel="noopener noreferrer">Ольга Потифорова</a>. Все права защищены.</p>
+</footer>
+
+
