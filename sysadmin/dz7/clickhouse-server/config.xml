@@ -1,0 +1,53 @@
+<clickhouse replace="true">
+  <display_name>clickhouse-local</display_name>
+  <listen_host>0.0.0.0</listen_host>
+  
+  <http_port>8124</http_port>
+  <tcp_port>9000</tcp_port>
+  
+  <interserver_http_port>9009</interserver_http_port>
+  
+  <remote_servers>
+    <default>
+        <shard>
+            <replica>
+                <host>localhost</host>  <!-- Имя хоста или контейнера -->
+                <port>9009</port>  <!-- Порт для межсерверного HTTP-соединения -->
+            </replica>
+        </shard>
+    </default>
+</remote_servers>
+
+
+  <user_directories>
+      <users_xml>
+          <path>users.xml</path>
+      </users_xml>
+      <local_directory>
+          <path>/var/lib/clickhouse/access/</path>
+      </local_directory>
+  </user_directories>
+
+  <distributed_ddl>
+      <path>/clickhouse/task_queue/ddl</path>
+  </distributed_ddl>
+
+  <zookeeper_log>
+    <path>/var/lib/clickhouse/zookeeper_log/</path>
+  </zookeeper_log>
+
+  <zookeeper>
+      <node>
+          <host>localhost</host>
+          <port>9181</port>
+      </node>
+  </zookeeper>
+
+  <macros>
+    <replica>replica_local</replica>
+    <shard>shard_1</shard>
+  </macros>
+
+  <default_replica_path>/clickhouse/tables/{database}/{table}</default_replica_path>
+  <default_replica_name>{replica}</default_replica_name>
+</clickhouse>
