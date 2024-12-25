@@ -1,0 +1,14 @@
+# Используем официальный образ Node.js
+FROM node:14
+
+# Устанавливаем рабочую директорию
+WORKDIR /usr/my/my
+
+# Копируем package.json и устанавливаем зависимости
+COPY package*.json ./
+RUN npm install
+
+
+# Запускаем приложение
+CMD ["node", "index.js"]
+
