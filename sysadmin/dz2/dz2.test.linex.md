@@ -35,7 +35,7 @@ ps -h
    2521 pts/0    Ss     0:00 -bash
    2529 pts/0    Sl+    0:00 ./serverTest
    2540 pts/1    Ss     0:00 -bash
-   2561 pts/1    S+     0:00 strace -o name.txt -p 2529 -s 512 -f
+   2561 pts/1    S+     0:00 strace -o logs.txt -p 2529 -s 512 -f
    2574 pts/2    Ss     0:00 -bash
    2613 pts/0    S+     0:00 ./serverTest
    2616 pts/0    S+     0:00 ./serverTest
