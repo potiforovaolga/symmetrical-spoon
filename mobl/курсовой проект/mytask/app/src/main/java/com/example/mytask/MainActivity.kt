@@ -9,7 +9,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -93,7 +92,6 @@ class MainActivity : ComponentActivity() {
                 label = { Text("Дата заметки") },
                 readOnly = true,
                 modifier = Modifier.clickable {
-                    // Логика выбора даты с помощью DatePickerDialog
                     showDatePickerDialog { selectedDate ->
                         noteDate = selectedDate
                     }
@@ -103,12 +101,12 @@ class MainActivity : ComponentActivity() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(onClick = {
-
                 if (noteTitle.isNotBlank() && noteContent.isNotBlank()) {
                     saveOrUpdateNote(
                         Note(noteTitle, noteContent, date = noteDate),
                         editingNoteIndex,
                         notes,
+
                         { updatedNotes -> notes = updatedNotes },
                         { index -> editingNoteIndex = index }
                     )
@@ -121,6 +119,10 @@ class MainActivity : ComponentActivity() {
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Подсчет выполненных заметок
+            val completedCount = notes.count { it.isCompleted }
+            Text("Выполнено заметок: $completedCount из ${notes.size}")
 
             LazyColumn {
                 items(notes.sortedByDescending { it.date }) { note ->
@@ -197,8 +199,8 @@ class MainActivity : ComponentActivity() {
             val isCompleted = sharedPreferences.getBoolean("note_completed_$i", false)
             val date = sharedPreferences.getLong("note_date_$i", System.currentTimeMillis())
             if (title != null && content != null) {
-
                 savedNotes.add(Note(title, content, isCompleted, date))
+
             }
         }
         return savedNotes
