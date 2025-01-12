@@ -26,12 +26,13 @@ import java.util.*
 data class Note(
     val title: String,
     val content: String,
-    var isCompleted: Boolean = false,
+    var isCompleted: MutableState<Boolean> = mutableStateOf(false),
     val date: Long // Сохраняем дату создания заметки
 )
 
 class MainActivity : ComponentActivity() {
     private lateinit var sharedPreferences: SharedPreferences
+    private var notes by mutableStateOf(mutableListOf<Note>()) // Переместили сюда
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,10 +52,14 @@ class MainActivity : ComponentActivity() {
         var noteTitle by remember { mutableStateOf("") }
         var noteContent by remember { mutableStateOf("") }
         var noteDate by remember { mutableStateOf(System.currentTimeMillis()) }
-        var notes by remember { mutableStateOf(getSavedNotes()) }
         var editingNoteIndex by remember { mutableStateOf(-1) }
         var showDialog by remember { mutableStateOf(false) }
         var selectedNote by remember { mutableStateOf<Note?>(null) }
+
+        // Загружаем заметки при первом запуске
+        LaunchedEffect(Unit) {
+            notes = getSavedNotes().toMutableList()
+        }
 
         Column(
             modifier = Modifier
@@ -74,21 +79,19 @@ class MainActivity : ComponentActivity() {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-    // Изменение TextField для содержания заметки
-    TextField(
-        value = noteContent,
-        onValueChange = { noteContent = it },
-        label = { Text("Введите содержание заметки") },
-        keyboardOptions = KeyboardOptions.Default.copy(
-            imeAction = ImeAction.Default // Убираем Next, чтобы не мешать многострочному вводу
-        ),
-        maxLines = 5, // Устанавливаем максимальное количество строк
-        modifier = Modifier.fillMaxHeight(0.5f) // Задаем высоту, если нужно
-    )
+            TextField(
+                value = noteContent,
+                onValueChange = { noteContent = it },
+                label = { Text("Введите содержание заметки") },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Default // Убираем Next, чтобы не мешать многострочному вводу
+                ),
+                maxLines = 5,
+                modifier = Modifier.fillMaxHeight(0.5f)
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Поле для выбора даты
             TextField(
                 value = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(noteDate)),
                 onValueChange = {},
@@ -102,20 +105,20 @@ class MainActivity : ComponentActivity() {
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-
             Button(onClick = {
                 if (noteTitle.isNotBlank() && noteContent.isNotBlank()) {
-                    saveOrUpdateNote(
-                        Note(noteTitle, noteContent, date = noteDate),
-                        editingNoteIndex,
-                        notes,
-
-                        { updatedNotes -> notes = updatedNotes },
-                        { index -> editingNoteIndex = index }
-                    )
+                    if (editingNoteIndex >= 0) {
+                        // Обновляем существующую заметку
+                        notes[editingNoteIndex] = Note(noteTitle, noteContent, notes[editingNoteIndex].isCompleted, noteDate)
+                    } else {
+                        // Добавляем новую заметку
+                        notes.add(Note(noteTitle, noteContent, mutableStateOf(false), noteDate))
+                    }
+                    saveNotes(notes)
                     noteTitle = ""
                     noteContent = ""
-                    noteDate = System.currentTimeMillis() // Сброс даты после сохранения
+                    noteDate = System.currentTimeMillis()
+                    editingNoteIndex = -1 // Сбрасываем индекс редактирования после обновления
                 }
             }) {
                 Text(if (editingNoteIndex >= 0) "Обновить" else "Сохранить")
@@ -123,137 +126,122 @@ class MainActivity : ComponentActivity() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Подсчет выполненных заметок
-            val completedCount = notes.count { it.isCompleted }
+            val completedCount = notes.count { it.isCompleted.value }
             Text("Выполнено заметок: $completedCount из ${notes.size}")
 
+            Spacer(modifier = Modifier.height(16.dp))
+
             LazyColumn {
-    items(notes.sortedBy { it.date }) { note ->
+                items(notes.sortedBy { it.date }) { note ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
-                            checked = note.isCompleted,
+                            checked = note.isCompleted.value,
                             onCheckedChange = { isChecked ->
-                                note.isCompleted = isChecked
+                                note.isCompleted.value = isChecked
                                 saveNotes(notes)
                             }
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "${note.title} (${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(note.date))})",
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable {
-                                    selectedNote = note
-                                    showDialog = true
-                                }
+                            text = "${note.title} (${formatDate(note.date)})",
+                            modifier = Modifier.clickable {
+                                selectedNote = note
+                                showDialog = true
+                            }
                         )
                     }
                 }
             }
-        }
 
-        if (showDialog && selectedNote != null) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text("Заметка") },
-                text = {
-                    Column {
-                        Text("Название: ${selectedNote!!.title}")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Содержание: ${selectedNote!!.content}")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Дата: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(selectedNote!!.date))}")
+            if (showDialog && selectedNote != null) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    title = { Text("Заметка") },
+                    text = {
+                        Column {
+                            Text("Название: ${selectedNote!!.title}")
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Содержание: ${selectedNote!!.content}")
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Дата: ${formatDate(selectedNote!!.date)}")
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            editingNoteIndex = notes.indexOf(selectedNote)
+                            noteTitle = selectedNote!!.title
+                            noteContent = selectedNote!!.content
+                            noteDate = selectedNote!!.date 
+                            showDialog = false
+                        }) {
+                            Text("Редактировать")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            deleteNote(selectedNote!!)
+                            showDialog = false
+                        }) {
+                            Text("Удалить")
+                        }
                     }
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        editingNoteIndex = notes.indexOf(selectedNote)
-                        noteTitle = selectedNote!!.title
-                        noteContent = selectedNote!!.content
-                        noteDate = selectedNote!!.date // Устанавливаем дату выбранной заметки для редактирования
-                        showDialog = false
-                    }) {
-                        Text("Редактировать")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        notes.remove(selectedNote)
-                        saveNotes(notes)
-                        showDialog = false
-                    }) {
-                        Text("Удалить")
-                    }
-                }
-            )
+                )
+            }
         }
     }
 
-    private fun getSavedNotes(): MutableList<Note> {
-        val savedNotes = mutableListOf<Note>()
-        val notesCount = sharedPreferences.getInt("notes_count", 0)
+    private fun formatDate(dateInMillis: Long): String {
+        return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(dateInMillis))
+    }
 
-        for (i in 0 until notesCount) {
-            val title = sharedPreferences.getString("note_title_$i", null)
-            val content = sharedPreferences.getString("note_content_$i", null)
-            val isCompleted = sharedPreferences.getBoolean("note_completed_$i", false)
-            val date = sharedPreferences.getLong("note_date_$i", System.currentTimeMillis())
-            if (title != null && content != null) {
-                savedNotes.add(Note(title, content, isCompleted, date))
-
-            }
+    private fun getSavedNotes(): List<Note> {
+        val notesListString = sharedPreferences.getString("notes", "") ?: return emptyList()
+        return notesListString.split(";").mapNotNull { noteString ->
+            val parts = noteString.split(",")
+            if (parts.size == 4) {
+                val title = parts[0]
+                val content = parts[1]
+                val isCompleted = parts[2].toBoolean()
+                val date = parts[3].toLongOrNull() ?: return@mapNotNull null
+                Note(title, content, mutableStateOf(isCompleted), date)
+            } else null
         }
-        return savedNotes
     }
 
     private fun saveNotes(notes: List<Note>) {
+        val notesString = notes.joinToString(";") { note ->
+            "${note.title},${note.content},${note.isCompleted.value},${note.date}"
+        }
         sharedPreferences.edit {
-            putInt("notes_count", notes.size)
-            notes.forEachIndexed { index, note ->
-                putString("note_title_$index", note.title)
-                putString("note_content_$index", note.content)
-                putBoolean("note_completed_$index", note.isCompleted)
-                putLong("note_date_$index", note.date)
-            }
+            putString("notes", notesString)
         }
-    }
-
-    private fun saveOrUpdateNote(
-        note: Note,
-        editingIndex: Int,
-        currentNotes: MutableList<Note>,
-        updateNotes: (MutableList<Note>) -> Unit,
-        updateEditingIndex: (Int) -> Unit
-    ) {
-        if (editingIndex >= 0) {
-            currentNotes[editingIndex] = note // Обновление существующей заметки
-        } else {
-            currentNotes.add(note) // Добавление новой заметки
-        }
-
-        updateNotes(currentNotes)
-        saveNotes(currentNotes)
-        updateEditingIndex(-1) // Сброс индекса редактирования после сохранения
     }
 
     private fun showDatePickerDialog(onDateSelected: (Long) -> Unit) {
         val calendar = Calendar.getInstance()
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
+        val datePickerDialog = DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                val selectedDate = Calendar.getInstance().apply {
+                    set(Calendar.YEAR, year)
+                    set(Calendar.MONTH, month)
+                    set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                }.timeInMillis
+                onDateSelected(selectedDate)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+        datePickerDialog.show()
+    }
 
-        DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
-            val selectedDate = Calendar.getInstance().apply {
-                set(Calendar.YEAR, selectedYear)
-                set(Calendar.MONTH, selectedMonth)
-                set(Calendar.DAY_OF_MONTH, selectedDay)
-            }.timeInMillis
-
-            onDateSelected(selectedDate)
-        }, year, month, day).show()
+    private fun deleteNote(note: Note) {
+        // Удаляем заметку из списка и обновляем сохраненные данные
+        notes.remove(note)
+        saveNotes(notes)
     }
 }
-
