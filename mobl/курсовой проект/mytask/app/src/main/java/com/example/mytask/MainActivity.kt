@@ -74,14 +74,17 @@ class MainActivity : ComponentActivity() {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            TextField(
-                value = noteContent,
-                onValueChange = { noteContent = it },
-                label = { Text("Введите содержание заметки") },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Next
-                )
-            )
+    // Изменение TextField для содержания заметки
+    TextField(
+        value = noteContent,
+        onValueChange = { noteContent = it },
+        label = { Text("Введите содержание заметки") },
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Default // Убираем Next, чтобы не мешать многострочному вводу
+        ),
+        maxLines = 5, // Устанавливаем максимальное количество строк
+        modifier = Modifier.fillMaxHeight(0.5f) // Задаем высоту, если нужно
+    )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -125,7 +128,7 @@ class MainActivity : ComponentActivity() {
             Text("Выполнено заметок: $completedCount из ${notes.size}")
 
             LazyColumn {
-                items(notes.sortedByDescending { it.date }) { note ->
+    items(notes.sortedBy { it.date }) { note ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
