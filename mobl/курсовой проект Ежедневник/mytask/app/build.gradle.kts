@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.mytask"
-        minSdk = 26
+        minSdk = 30
         //noinspection OldTargetApi
         targetSdk = 34
         versionCode = 1
@@ -64,4 +64,6 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
 //    implementation(libs.androidx.datastore.preferences)
    implementation(libs.androidx.work.runtime.ktx) // Добавлена библиотека WorkManager
+    implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.foundation.compose)
 }

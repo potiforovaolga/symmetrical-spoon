@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.example.mytask.NotificationWorker
+import com.example.mytask.utils.NotificationWorker
 import java.util.concurrent.TimeUnit
 
 fun scheduleNotification(context: Context, title: String, id: String, dateInMillis: Long) {

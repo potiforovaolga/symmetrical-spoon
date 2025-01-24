@@ -5,10 +5,25 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
-import androidx.navigation.compose.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import androidx.navigation.compose.rememberNavController
+import com.example.mytask.models.Note
+import com.example.mytask.screens.*
 import com.example.mytask.ui.theme.MyTaskTheme
+import com.example.mytask.utils.scheduleNotification
 import com.google.gson.Gson
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var sharedPreferences: SharedPreferences
@@ -21,63 +36,108 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyTaskTheme {
                 var notes by remember { mutableStateOf(loadNotes()) }
-                var selectedTag by remember { mutableStateOf("") }
-
+                var selectedCategory by remember { mutableStateOf("Все") }
                 val navController = rememberNavController()
-                NavHost(navController, startDestination = "note_list") {
-                    composable("note_list") {
-                        val filteredNotes = if (selectedTag.isNotEmpty()) {
-                            notes.filter { it.tag == selectedTag }
-                        } else {
-                            notes
+                val scaffoldState = rememberScaffoldState()
+                val scope = rememberCoroutineScope()
+
+                Scaffold(
+                    scaffoldState = scaffoldState,
+                    topBar = {
+                        TopAppBar(
+                            title = { Text("Список заметок") },
+                            navigationIcon = {
+                                IconButton(onClick = { scope.launch { scaffoldState.drawerState.open() } }) {
+                                    Icon(Icons.Filled.Menu, contentDescription = "Открыть меню")
+                                }
+                            }
+                        )
+                    },
+                    drawerContent = {
+                        DrawerContent(
+                            categories = listOf("Все", "Учеба", "Работа", "Дом", "Хобби", "Прочие", "Выполненные", "Невыполненные"),
+                            onCategorySelected = { category ->
+                                selectedCategory = category
+                                scope.launch { scaffoldState.drawerState.close() }
+                            }
+                        )
+                    }
+                ) { padding ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = "note_list",
+                        modifier = Modifier.padding(padding)
+                    ) {
+                        // Экран списка заметок
+                        composable("note_list") {
+                            NoteListScreen(
+                                notes = notes.filter {
+                                    when (selectedCategory) {
+                                        "Все" -> true
+                                        "Выполненные" -> it.isCompleted.value
+                                        "Невыполненные" -> !it.isCompleted.value
+                                        else -> it.tag == selectedCategory
+                                    }
+                                },
+                                onNotesUpdated = { updatedNotes ->
+                                    notes = updatedNotes
+                                    saveNotes(updatedNotes)
+                                },
+                                onDelete = { noteId ->
+                                    notes = notes.filterNot { it.id == noteId }
+                                    saveNotes(notes)
+                                },
+                                navController = navController
+                            )
                         }
 
-                        NoteListScreen(
-                            notes = filteredNotes,
-                            onNotesUpdated = { updatedNotes ->
-                                notes = updatedNotes
-                                saveNotes(updatedNotes)
-                            },
-                            onTagSelected = { tag ->
-                                selectedTag = tag
-                            },
-                            navController = navController
-                        )
-                    }
-                    composable("add_note") {
-                        NoteScreen(
-                            notes = notes,
-                            onNotesUpdated = { updatedNotes ->
-                                notes = updatedNotes
-                                saveNotes(updatedNotes)
-                            },
-                            context = this@MainActivity,
-                            navController = navController
-                        )
-                    }
-                    composable("note_detail/{noteId}") { backStackEntry ->
-                        val noteId = backStackEntry.arguments?.getString("noteId") ?: return@composable
-                        NoteDetailScreen(
-                            noteId = noteId,
-                            navController = navController,
-                            notes = notes,
-                            onNotesUpdated = { updatedNotes ->
-                                notes = updatedNotes
-                                saveNotes(updatedNotes)
-                            }
-                        )
-                    }
-                    composable("edit_note/{noteId}") { backStackEntry ->
-                        val noteId = backStackEntry.arguments?.getString("noteId") ?: return@composable
-                        EditNoteScreen(
-                            noteId = noteId,
-                            navController = navController,
-                            notes = notes,
-                            onNotesUpdated = { updatedNotes ->
-                                notes = updatedNotes
-                                saveNotes(updatedNotes)
-                            }
-                        )
+                        // Экран деталей заметки
+                        composable(
+                            "note_detail/{noteId}",
+                            arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val noteId = backStackEntry.arguments?.getString("noteId") ?: return@composable
+                            NoteDetailScreen(
+                                noteId = noteId,
+                                notes = notes,
+                                onDelete = { id ->
+                                    notes = notes.filterNot { it.id == id }
+                                    saveNotes(notes)
+                                    navController.popBackStack("note_list", false)
+                                },
+                                navController = navController
+                            )
+                        }
+
+// Экран создания новой заметки
+composable("add_note") {
+    NoteScreen(
+        notes = notes,
+        onNotesUpdated = { updatedNotes ->
+            notes = updatedNotes
+            saveNotes(updatedNotes)
+        },
+        context = this@MainActivity,
+        navController = navController
+    )
+}
+
+                        // Экран редактирования заметки
+                        composable(
+                            "edit_note/{noteId}",
+                            arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val noteId = backStackEntry.arguments?.getString("noteId") ?: return@composable
+                            EditNoteScreen(
+                                noteId = noteId,
+                                navController = navController,
+                                notes = notes,
+                                onNotesUpdated = { updatedNotes ->
+                                    notes = updatedNotes
+                                    saveNotes(updatedNotes)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -101,3 +161,21 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@Composable
+fun DrawerContent(categories: List<String>, onCategorySelected: (String) -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .padding(16.dp)
+    ) {
+        categories.forEach { category ->
+            Text(
+                text = category,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onCategorySelected(category) }
+                    .padding(8.dp)
+            )
+        }
+    }
+}
