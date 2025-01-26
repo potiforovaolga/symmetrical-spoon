@@ -54,6 +54,9 @@ fun NoteScreen(
             onValueChange = { noteContent = it },
             label = { Text("Введите содержание заметки") },
             modifier = Modifier.fillMaxWidth()
+                .fillMaxWidth()
+                .heightIn(min = 100.dp),
+            maxLines = 5
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -97,7 +100,7 @@ fun NoteScreen(
         TextField(
             value = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(noteDateTime)),
             onValueChange = {},
-            label = { Text("Дата и время заметки") },
+            label = { Text("Дата и время напоминания о заметки") },
             readOnly = true,
             modifier = Modifier.clickable {
                 showCustomDateTimePickerDialog(context) { selectedDateTime ->
